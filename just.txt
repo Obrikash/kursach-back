@@ -1,0 +1,1 @@
+postgres://admin:password@localhost:5431/swimming_pool?sslmode=disable
