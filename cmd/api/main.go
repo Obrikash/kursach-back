@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/obrikash/swimming_pool/internal/data"
+
 	_ "github.com/lib/pq"
 )
 
@@ -31,6 +33,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
+	models data.Models
 	wg     sync.WaitGroup
 }
 
@@ -66,6 +69,7 @@ func main() {
 	app := application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	err = app.serve()

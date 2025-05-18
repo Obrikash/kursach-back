@@ -50,18 +50,18 @@ CREATE TABLE schedules (
     time_of_day TIME WITHOUT TIME ZONE NOT NULL
 );
 
-CREATE TABLE abonements (
+CREATE TABLE subscriptions (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
     visits_per_week INT NOT NULL CHECK (visits_per_week IN (1, 2, 3, 5))
 );
 
-CREATE TABLE user_abonements (
+CREATE TABLE user_subscriptions (
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    abonement_id INT REFERENCES abonements(id) ON DELETE RESTRICT,
-    price DECIMAL(10, 2) NOT NULL,
+    subscription_id INT REFERENCES subscriptions(id) ON DELETE RESTRICT,
     date_start TIMESTAMP(0) NOT NULL,
     date_end TIMESTAMP(0) NOT NULL,
-    PRIMARY KEY (user_id, abonement_id)
+    PRIMARY KEY (user_id, subscription_id)
 );
 
