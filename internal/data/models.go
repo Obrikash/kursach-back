@@ -10,9 +10,13 @@ var (
 )
 
 type Models struct {
-	Pools PoolModel
+	Pools  PoolModel
+	Users  UserModel
+	Groups GroupModel
 }
 
 func NewModels(db *sql.DB) Models {
-	return Models{Pools: PoolModel{DB: db}}
+	return Models{Pools: PoolModel{DB: db},
+		Users:  UserModel{DB: db},
+		Groups: GroupModel{DB: db}}
 }
