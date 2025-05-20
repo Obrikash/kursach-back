@@ -72,3 +72,26 @@ func (pm PoolModel) GetAll() ([]*Pool, error) {
 	}
 	return pools, nil
 }
+
+func (pm PoolModel) MaxProfit() (*Pool, float64, error) {
+	query := `SELECT p.id AS pool_id, p.name AS pool_name, p.address, p.type, SUM(sub.price) AS total_revenue 
+	FROM user_subscriptions us JOIN user_groups ug ON us.user_id = ug.user_id JOIN training_groups tg ON ug.group_id = tg.id 
+	JOIN trainers tr ON tg.trainer_id = tr.id JOIN pools p ON tr.pool_id = p.id 
+	JOIN subscriptions sub ON us.subscription_id = sub.id GROUP BY p.id, p.name, p.address, p.type ORDER BY total_revenue DESC LIMIT 1;`
+
+	pool := &Pool{}
+	var profit float64
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := pm.DB.QueryRowContext(ctx, query).Scan(&pool.ID, &pool.Name, &pool.Address, &pool.PoolType, &profit)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, 0, ErrRecordNotFound
+		default:
+			return nil, 0, err
+		}
+	}
+	return pool, profit, nil
+}
