@@ -9,7 +9,7 @@ func (app *application) listGroupsHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"pools": groups}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"groups": groups}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
