@@ -18,6 +18,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/subscriptions", app.listSubscriptionsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/pools/trainers", app.listTrainersForPoolsHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
+
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
-	return app.recoverPanic(router)
+	return app.recoverPanic(app.authenticate(router))
 }

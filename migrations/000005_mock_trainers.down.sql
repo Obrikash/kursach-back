@@ -1,0 +1,1 @@
+DELETE FROM trainers WHERE (user_id, pool_id) IN ((1, 1), (2, 1), (3, 2), (4, 2));

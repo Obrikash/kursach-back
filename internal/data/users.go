@@ -31,6 +31,11 @@ type User struct {
 	Image     string    `json:"image_url"`
 }
 
+type PoolWithTrainers struct {
+	Pool     Pool    `json:"pool"`
+	Trainers []*User `json:"trainers"`
+}
+
 type UserModel struct {
 	DB *sql.DB
 }
@@ -122,9 +127,15 @@ func (um UserModel) GetTrainers() ([]*User, error) {
 	return trainers, nil
 }
 
-func (um UserModel) GetTrainersForPools() (map[Pool][]*User, error) {
-	query := `SELECT p.id AS "pool_id", p.name AS "pool_name", p.address, p.type AS "category",
-	 u.id AS "trainer_id", u.full_name, u.image FROM trainers t JOIN pools p ON t.pool_id = p.id JOIN users u ON t.user_id = u.id ORDER BY p.name`
+func (um UserModel) GetTrainersForPools() ([]PoolWithTrainers, error) {
+	query := `
+        SELECT p.id, p.name, p.address, p.type,
+               u.id, u.full_name, u.email, u.image
+        FROM trainers t
+        JOIN pools p ON t.pool_id = p.id
+        JOIN users u ON t.user_id = u.id
+        ORDER BY p.name, u.id
+    `
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -133,28 +144,52 @@ func (um UserModel) GetTrainersForPools() (map[Pool][]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
-	trainers := map[Pool][]*User{}
+	var result []PoolWithTrainers
+	var currentPool Pool
+	var trainers []*User
 
 	for rows.Next() {
 		var pool Pool
 		var trainer User
 
-		err := rows.Scan(&pool.ID, &pool.Name, &pool.Address, &pool.PoolType, &trainer.ID, &trainer.FullName, &trainer.Image)
+		err := rows.Scan(
+			&pool.ID, &pool.Name, &pool.Address, &pool.PoolType,
+			&trainer.ID, &trainer.FullName, &trainer.Email, &trainer.Image,
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		trainers[pool] = append(trainers[pool], &trainer)
+		if currentPool.ID == 0 || pool.ID != currentPool.ID {
+			// New pool detected
+			if currentPool.ID != 0 {
+				result = append(result, PoolWithTrainers{
+					Pool:     currentPool,
+					Trainers: trainers,
+				})
+			}
+			currentPool = pool
+			trainers = nil // Reset trainers for the new pool
+		}
+
+		trainers = append(trainers, &trainer)
+	}
+
+	// Add the last pool
+	if currentPool.ID != 0 {
+		result = append(result, PoolWithTrainers{
+			Pool:     currentPool,
+			Trainers: trainers,
+		})
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return trainers, nil
+	return result, nil
 }
 
 func (um UserModel) Insert(user *User) error {

@@ -1,9 +1,7 @@
 package data
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base32"
+	"database/sql"
 	"time"
 )
 
@@ -19,7 +17,7 @@ type Token struct {
 	Scope     string    `json:"-"`
 }
 
-func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
+/*func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
 	token := &Token{
 		UserID: userID,
 		Expiry: time.Now().Add(ttl),
@@ -38,4 +36,8 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 	token.Hash = hash[:]
 
 	return token, nil
+}*/
+
+type TokenModel struct {
+	DB *sql.DB
 }

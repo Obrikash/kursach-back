@@ -20,9 +20,9 @@ CREATE TABLE users (
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     full_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    hashed_password BYTEA NOT NULL,
+    hashed_password TEXT NOT NULL,
     role_id INT REFERENCES roles(id) NOT NULL,
-    image TEXT
+    image TEXT NOT NULL
 );
 
 CREATE TABLE trainers (
