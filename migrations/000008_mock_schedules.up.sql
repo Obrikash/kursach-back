@@ -1,0 +1,1 @@
+INSERT INTO schedules (group_id, day_of_week, time_of_day) VALUES (1, 2, '10:00'), (2, 3, '15:00'), (3, 4, '09:00'), (4, 5, '14:00');

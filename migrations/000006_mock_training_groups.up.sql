@@ -1,0 +1,1 @@
+INSERT INTO training_groups (pool_id, category_id, trainer_id) VALUES (1, 1, 1), (1, 3, 2), (2, 2, 3), (2, 4, 4);
