@@ -258,3 +258,48 @@ func (um UserModel) Get(id int64) (*User, error) {
 
 	return &user, nil
 }
+
+type ProfitTrainersPools struct {
+	ID       int64   `json:"id"`
+	FullName string  `json:"full_name"`
+	PoolId   int64   `json:"pool_id"`
+	PoolName string  `json:"pool_name"`
+	Profit   float64 `json:"profit"`
+}
+
+func (um UserModel) ProfitForEachTrainerInEachPool() ([]*ProfitTrainersPools, error) {
+	query := `SELECT tr.id AS trainer_id, u_trainer.full_name AS trainer_name, p.id AS pool_id, p.name AS pool_name,
+	SUM(sub.price) AS total_profit FROM user_subscriptions us JOIN user_groups ug ON us.user_id = ug.user_id 
+	JOIN training_groups tg ON ug.group_id = tg.id JOIN trainers tr ON tg.trainer_id = tr.id JOIN users u_trainer ON 
+	tr.user_id = u_trainer.id JOIN pools p ON tr.pool_id = p.id JOIN subscriptions sub ON us.subscription_id = sub.id 
+	GROUP BY tr.id, u_trainer.full_name, p.id, p.name ORDER BY p.name, u_trainer.full_name;`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := um.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	profitsOfTrainers := []*ProfitTrainersPools{}
+
+	for rows.Next() {
+		var trainerProfit ProfitTrainersPools
+
+		err := rows.Scan(&trainerProfit.ID, &trainerProfit.FullName, &trainerProfit.PoolId, &trainerProfit.PoolName, &trainerProfit.Profit)
+		if err != nil {
+			return nil, err
+		}
+
+		profitsOfTrainers = append(profitsOfTrainers, &trainerProfit)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return profitsOfTrainers, nil
+}

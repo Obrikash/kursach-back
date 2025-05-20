@@ -87,3 +87,17 @@ func (app *application) listTrainersForPoolsHandler(w http.ResponseWriter, r *ht
 		return
 	}
 }
+
+func (app *application) profitOfTrainers(w http.ResponseWriter, r *http.Request) {
+	profits, err := app.models.Users.ProfitForEachTrainerInEachPool()
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"profits": profits}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
