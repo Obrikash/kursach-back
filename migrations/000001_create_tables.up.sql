@@ -21,7 +21,8 @@ CREATE TABLE users (
     full_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
-    role_id INT REFERENCES roles(id) NOT NULL
+    role_id INT REFERENCES roles(id) NOT NULL,
+    image TEXT
 );
 
 CREATE TABLE trainers (
@@ -54,7 +55,7 @@ CREATE TABLE subscriptions (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    visits_per_week INT NOT NULL CHECK (visits_per_week IN (1, 2, 3, 5))
+    visits_per_week INT NOT NULL CHECK (visits_per_week IN (1, 3, 5, 7))
 );
 
 CREATE TABLE user_subscriptions (

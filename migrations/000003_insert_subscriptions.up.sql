@@ -1,0 +1,1 @@
+INSERT INTO subscriptions (name, price, visits_per_week) VALUES ('стандарт', 1499, 1), ('стандарт+', 2999, 3), ('премиум', 3899, 5), ('премиум+', 4999, 7);

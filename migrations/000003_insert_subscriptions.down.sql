@@ -1,0 +1,1 @@
+DELETE FROM subscriptions WHERE name IN ('стандарт', 'стандарт+', 'премиум', 'премиум+');

@@ -52,3 +52,38 @@ func (um UserModel) GetTrainers() ([]*User, error) {
 
 	return trainers, nil
 }
+
+func (um UserModel) GetTrainersForPools() (map[Pool][]*User, error) {
+	query := `SELECT p.id AS "pool_id", p.name AS "pool_name", p.address, p.type AS "category",
+	 u.id AS "trainer_id", u.full_name, u.image FROM trainers t JOIN pools p ON t.pool_id = p.id JOIN users u ON t.user_id = u.id ORDER BY p.name`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := um.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	trainers := map[Pool][]*User{}
+
+	for rows.Next() {
+		var pool Pool
+		var trainer User
+
+		err := rows.Scan(&pool.ID, &pool.Name, &pool.Address, &pool.PoolType, &trainer.ID, &trainer.FullName, &trainer.Image)
+		if err != nil {
+			return nil, err
+		}
+
+		trainers[pool] = append(trainers[pool], &trainer)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return trainers, nil
+}
