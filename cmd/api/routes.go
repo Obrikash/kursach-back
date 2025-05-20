@@ -10,9 +10,11 @@ func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
 	router.HandlerFunc(http.MethodGet, "/v1/pools", app.listPoolsHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/trainers", app.listTrainersHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/trainers", app.listTrainersHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/groups", app.listGroupsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/subscriptions", app.listSubscriptionsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/pools/trainers", app.listTrainersForPoolsHandler)
+
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	return router
 }
