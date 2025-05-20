@@ -9,6 +9,9 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
+	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+	router.NotFound = http.HandlerFunc(app.notFoundResponse)
+
 	router.HandlerFunc(http.MethodGet, "/v1/pools", app.listPoolsHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/users/trainers", app.listTrainersHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/groups", app.listGroupsHandler)
@@ -16,5 +19,5 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/pools/trainers", app.listTrainersForPoolsHandler)
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
-	return router
+	return app.recoverPanic(router)
 }
