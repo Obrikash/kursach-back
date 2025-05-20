@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func (pm PoolModel) Get(id int64) (*Pool, error) {
 		return nil, ErrRecordNotFound
 	}
 
-	query := `SELECT p.id, p.name. p.address, p.type FROM pools p WHERE p.id = $1`
+	query := `SELECT p.id, p.name, p.address, p.type FROM pools p WHERE p.id = $1`
 
 	pool := &Pool{}
 
@@ -44,7 +43,7 @@ func (pm PoolModel) Get(id int64) (*Pool, error) {
 }
 
 func (pm PoolModel) GetAll() ([]*Pool, error) {
-	query := fmt.Sprintf("SELECT p.id, p.name, p.address, p.type FROM pools p ORDER BY name ASC")
+	query := "SELECT p.id, p.name, p.address, p.type FROM pools p ORDER BY name ASC"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

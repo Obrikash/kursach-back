@@ -178,3 +178,48 @@ func (um UserModel) Insert(user *User) error {
 
 	return nil
 }
+
+func (um UserModel) GetByEmail(email string) (*User, error) {
+	query := `SELECT id, created_at, full_name, email, hashed_password, role_id, image FROM users WHERE email = $1`
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := um.DB.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.CreatedAt, &user.FullName, &user.Email, &user.Password.hash, &user.RoleID, &user.Image)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
+func (um UserModel) Get(id int64) (*User, error) {
+	query := `SELECT id, created_at, full_name, email, hashed_password, role_id, image FROM users WHERE id = $1`
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := um.DB.QueryRowContext(ctx, query, id).Scan(
+		&user.ID, &user.CreatedAt, &user.FullName, &user.Email, &user.Password.hash, &user.RoleID, &user.Image,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
