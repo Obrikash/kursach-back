@@ -7,10 +7,10 @@ import (
 )
 
 type Group struct {
-	ID       int64  `json:"id"`
-	Pool     string `json:"pool"`
-	Category string `json:"category"`
-	Trainer  User   `json:"trainer"`
+	ID       int64 `json:"id"`
+	Pool     int64 `json:"pool"`
+	Category int64 `json:"category"`
+	Trainer  User  `json:"trainer"`
 }
 
 type GroupModel struct {
@@ -50,4 +50,21 @@ func (gm GroupModel) GetGroups() ([]*Group, error) {
 	}
 
 	return groups, nil
+}
+
+func (gm GroupModel) AddToPool(group Group) error {
+	// we make this check so one trainer would not work in 2 pools, only at 1
+	query := `INSERT INTO training_groups (pool_id, category_id, trainer_id) SELECT $1, $2, id FROM trainers WHERE id = $3 and pool_id = $1 RETURNING id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	args := []any{group.Pool, group.Category, group.Trainer.ID}
+
+	err := gm.DB.QueryRowContext(ctx, query, args...).Scan(&group.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
