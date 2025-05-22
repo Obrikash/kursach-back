@@ -66,3 +66,5 @@ CREATE TABLE user_subscriptions (
     PRIMARY KEY (user_id, subscription_id)
 );
 
+CREATE UNIQUE INDEX unique_group_per_pool_category_trainer
+ON training_groups (pool_id, category_id, trainer_id);

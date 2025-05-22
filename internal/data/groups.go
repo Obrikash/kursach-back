@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 )
 
 var (
 	ErrTrainerOnlyOnePool = errors.New("Trainer could only work in one pool, not at both")
+	ErrDuplicateGroup     = errors.New("group already exists for this pool, category, and trainer")
 )
 
 type Group struct {
@@ -68,7 +70,16 @@ func (gm GroupModel) GetGroups() ([]*Groups, error) {
 
 func (gm GroupModel) AddToPool(group *Group) error {
 	// we make this check so one trainer would not work in 2 pools, only at 1
-	query := `INSERT INTO training_groups (pool_id, category_id, trainer_id) SELECT $1, $2, id FROM trainers WHERE id = $3 and pool_id = $1 RETURNING id`
+	query := `INSERT INTO training_groups (pool_id, category_id, trainer_id)
+SELECT $1, $2, id 
+FROM trainers 
+WHERE id = $3 AND pool_id = $1
+AND NOT EXISTS (
+    SELECT 1
+    FROM training_groups
+    WHERE pool_id = $1 AND category_id = $2 AND trainer_id = $3
+)
+RETURNING id;`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -80,6 +91,8 @@ func (gm GroupModel) AddToPool(group *Group) error {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrTrainerOnlyOnePool
+		case strings.Contains(err.Error(), "unique_group_per_pool_category_trainer"):
+			return ErrDuplicateGroup
 		default:
 			return err
 		}
