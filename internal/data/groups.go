@@ -18,11 +18,20 @@ type Group struct {
 	Trainer  User  `json:"trainer"`
 }
 
+type Groups struct {
+	ID          int64  `json:"id"`
+	Category    string `json:"category"`
+	PoolName    string `json:"pool_name"`
+	TrainerName string `json:"trainer_name"`
+	UserID      int64  `json:"user_id"`
+	Image       string `json:"image"`
+}
+
 type GroupModel struct {
 	DB *sql.DB
 }
 
-func (gm GroupModel) GetGroups() ([]*Group, error) {
+func (gm GroupModel) GetGroups() ([]*Groups, error) {
 	query := `SELECT g.id, c.name as "category", p.name as "pool", tr.full_name, t.user_id, tr.image
 	FROM training_groups g JOIN group_category c ON g.category_id = c.id 
 	JOIN pools p ON g.pool_id = p.id JOIN trainers t ON g.trainer_id = t.id JOIN users tr ON t.user_id = tr.id;`
@@ -37,12 +46,12 @@ func (gm GroupModel) GetGroups() ([]*Group, error) {
 
 	defer rows.Close()
 
-	groups := []*Group{}
+	groups := []*Groups{}
 
 	for rows.Next() {
-		var group Group
+		var group Groups
 
-		err := rows.Scan(&group.ID, &group.Category, &group.Pool, &group.Trainer.FullName, &group.Trainer.ID, &group.Trainer.Image)
+		err := rows.Scan(&group.ID, &group.Category, &group.PoolName, &group.TrainerName, &group.UserID, &group.Image)
 		if err != nil {
 			return nil, err
 		}
