@@ -24,6 +24,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/groups", app.requireAuthenticatedUser(app.addGroupToPoolHandler))
 
 	router.HandlerFunc(http.MethodGet, "/v1/subscriptions", app.requireAuthenticatedUser(app.listSubscriptionsHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/users/subscriptions", app.requireAuthenticatedUser(app.listUsersSubscriptionsHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
