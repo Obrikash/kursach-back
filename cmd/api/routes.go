@@ -17,6 +17,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/users/trainers", app.listTrainersHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/pools/trainers", app.listTrainersForPoolsHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/pools/trainers", app.requireAuthenticatedUser(app.attachTrainerToPoolHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/users/trainers/profit", app.profitOfTrainers)
 
 	router.HandlerFunc(http.MethodGet, "/v1/groups", app.listGroupsHandler)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -35,9 +36,14 @@ func (app *application) addGroupToPoolHandler(w http.ResponseWriter, r *http.Req
 
 	group := data.Group{Pool: input.PoolID, Category: input.CategoryID, Trainer: data.User{ID: input.TrainerID}}
 
-	err = app.models.Groups.AddToPool(group)
+	err = app.models.Groups.AddToPool(&group)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.invalidCredentialsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/obrikash/swimming_pool/internal/data"
@@ -96,6 +97,39 @@ func (app *application) profitOfTrainers(w http.ResponseWriter, r *http.Request)
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"profits": profits}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *application) attachTrainerToPoolHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		PoolID int64 `json:"pool_id"`
+	}
+	user := app.contextGetUser(r)
+	if user.RoleID != 1 {
+		app.notPermittedResponse(w, r)
+		return
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	err = app.models.Users.AttachTrainerToPool(user, input.PoolID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.invalidCredentialsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	err = app.writeJSON(w, http.StatusCreated, envelope{"success": fmt.Sprintf("attached trainer with ID %d to pool with ID %d", user.ID, input.PoolID)}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -52,7 +53,7 @@ func (gm GroupModel) GetGroups() ([]*Group, error) {
 	return groups, nil
 }
 
-func (gm GroupModel) AddToPool(group Group) error {
+func (gm GroupModel) AddToPool(group *Group) error {
 	// we make this check so one trainer would not work in 2 pools, only at 1
 	query := `INSERT INTO training_groups (pool_id, category_id, trainer_id) SELECT $1, $2, id FROM trainers WHERE id = $3 and pool_id = $1 RETURNING id`
 
@@ -63,7 +64,12 @@ func (gm GroupModel) AddToPool(group Group) error {
 
 	err := gm.DB.QueryRowContext(ctx, query, args...).Scan(&group.ID)
 	if err != nil {
-		return err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrRecordNotFound
+		default:
+			return err
+		}
 	}
 
 	return nil
