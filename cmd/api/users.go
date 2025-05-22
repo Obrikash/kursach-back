@@ -105,12 +105,8 @@ func (app *application) profitOfTrainers(w http.ResponseWriter, r *http.Request)
 
 func (app *application) attachTrainerToPoolHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
+		UserID int64 `json:"user_id"`
 		PoolID int64 `json:"pool_id"`
-	}
-	user := app.contextGetUser(r)
-	if user.RoleID != 1 {
-		app.notPermittedResponse(w, r)
-		return
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -119,17 +115,27 @@ func (app *application) attachTrainerToPoolHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = app.models.Users.AttachTrainerToPool(user, input.PoolID)
+	err = app.models.Users.AttachTrainerToPool(input.UserID, input.PoolID)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.invalidCredentialsResponse(w, r)
+		case errors.Is(err, data.ErrTrainerAlreadyAttached):
+			app.badRequestResponse(w, r, err)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
-	err = app.writeJSON(w, http.StatusCreated, envelope{"success": fmt.Sprintf("attached trainer with ID %d to pool with ID %d", user.ID, input.PoolID)}, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{"success": fmt.Sprintf("attached trainer with ID %d to pool with ID %d", input.UserID, input.PoolID)}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *application) profileUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+
+	err := app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

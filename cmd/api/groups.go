@@ -39,8 +39,8 @@ func (app *application) addGroupToPoolHandler(w http.ResponseWriter, r *http.Req
 	err = app.models.Groups.AddToPool(&group)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.invalidCredentialsResponse(w, r)
+		case errors.Is(err, data.ErrTrainerOnlyOnePool):
+			app.badRequestResponse(w, r, err)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}

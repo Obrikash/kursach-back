@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	ErrDuplicateEmail = errors.New("duplicate email")
+	ErrDuplicateEmail         = errors.New("duplicate email")
+	ErrTrainerAlreadyAttached = errors.New("Trainer is already attached to the pool.")
 )
 
 type password struct {
@@ -95,7 +96,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 }
 
 func (um UserModel) GetTrainers() ([]*User, error) {
-	query := `SELECT t.user_id, full_name, u.image FROM users u JOIN trainers t ON t.user_id = u.id`
+	query := `SELECT t.user_id, full_name, u.image, u.email FROM users u JOIN trainers t ON t.user_id = u.id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -112,7 +113,7 @@ func (um UserModel) GetTrainers() ([]*User, error) {
 	for rows.Next() {
 		var trainer User
 
-		err := rows.Scan(&trainer.ID, &trainer.FullName, &trainer.Image)
+		err := rows.Scan(&trainer.ID, &trainer.FullName, &trainer.Image, &trainer.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -304,17 +305,17 @@ func (um UserModel) ProfitForEachTrainerInEachPool() ([]*ProfitTrainersPools, er
 	return profitsOfTrainers, nil
 }
 
-func (um UserModel) AttachTrainerToPool(trainer *User, poolID int64) error {
+func (um UserModel) AttachTrainerToPool(userID int64, poolID int64) error {
 	query := "INSERT INTO trainers (user_id, pool_id) VALUES ($1, $2) RETURNING id"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := um.DB.QueryRowContext(ctx, query, trainer.ID, poolID).Scan(&trainer.ID)
+	err := um.DB.QueryRowContext(ctx, query, userID, poolID).Scan(&userID)
 	if err != nil {
 		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrRecordNotFound
+		case err.Error() == `pq: duplicate key value violates unique constraint "trainers_user_id_key"`:
+			return ErrTrainerAlreadyAttached
 		default:
 			return err
 		}

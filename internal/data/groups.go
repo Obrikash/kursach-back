@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+var (
+	ErrTrainerOnlyOnePool = errors.New("Trainer could only work in one pool, not at both")
+)
+
 type Group struct {
 	ID       int64 `json:"id"`
 	Pool     int64 `json:"pool"`
@@ -66,7 +70,7 @@ func (gm GroupModel) AddToPool(group *Group) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return ErrRecordNotFound
+			return ErrTrainerOnlyOnePool
 		default:
 			return err
 		}
